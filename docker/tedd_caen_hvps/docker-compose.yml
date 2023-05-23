@@ -1,5 +1,11 @@
 version: "3"
 services:
+  telegraf:
+    image: telegraf
+    restart: always
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
   mosquitto:
     image: eclipse-mosquitto:2.0
     restart: always
@@ -11,8 +17,26 @@ services:
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
       - ./mosquitto/config:/mosquitto/config
+
+  caen_hvps:
+    image: centos:caen_hvps_mqtt_test
+    platform: linux/amd64
+    build: ../..
+    restart: always
+    stdin_open: true #docker run -i
+    tty: true #docker run -t
+    #ports:
+    #  - "4000:4000"
+    #expose:
+    #  - "4000"
+    volumes:
+      - caen_hvps:/usr/app/caen_hvps
+    #depends_on:
+    #  - mosquitto    
 volumes:
+  telegraf.conf:
   mosquitto_data:
   mosquitto_log:
+  caen_hvps:
 
 
