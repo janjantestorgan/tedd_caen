@@ -258,12 +258,6 @@ def process_cli_args(args, config_dict):
             )
             # TODO: check if it is true
             msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
-            #msg_str = json.dumps(msg)
-            #mqtt_client = my_mqtt.get_client()
-            #topic ="hvps/status/channel"
-            #print("debug message", msg)
-            #my_mqtt.publish(topic, msg_str)
-            #my_mqtt.subscribe(topic)
 
     elif args.bias_voltage != None:
         my_hvps_ctrl.bias()
@@ -449,16 +443,28 @@ def main():
     config_dict = process_config_file_configobj(args.config_file)
     process_cli_args(args, config_dict)
 
+
+
+
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe(f"/{client.device.name}/cmd/#")
-    
-
+    #client.subscribe(f"/{client.device.name}/cmd/#")
+    client.subscribe("/SY4527/status/#")
+    #client.subscribe(f"/{my_hvps_ctrl.hvps_name}/cmd/#")
+    """Mqtt client on connect method"""
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+    else:
+        print("Failed to connect, return code %d\n", rc)
 
 def on_message(client, userdata, msg):
-    print("recv", msg.topic, msg.payload)
-    client.device.command(msg.topic, msg.payload)
+    #print("recv", msg.topic, msg.payload)
+    #client.device.command(msg.topic, msg.payload)
+    """Subscribed topic on message action"""
+    print("Received message:")
+    print("Topic: " + msg.topic)
+    print("Message: " + msg.payload.decode())
 
 
 def run(device, mqtt_host):
@@ -473,12 +479,7 @@ def run(device, mqtt_host):
     #print("config ", config_dict)
     args, unknown = parser.parse_known_args()
     config_dict = process_config_file_configobj(args.config_file)
-    #process_cli_args(args, config_dict)
-    #print("CONFIGG===", config_dict)
-    #print("args===", args)
-    #my_dump = process_cli_args(args,config_dict)
-    #print("my dump===", my_dump)
-    #msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+
     if "default_slot" in config_dict.keys():
         my_slot = int(config_dict["default_slot"])
     else:
@@ -487,7 +488,8 @@ def run(device, mqtt_host):
     my_hvps_ctrl = hvps_ctrl(config_dict, args, my_slot)
     my_hvps_ctrl.iset_current = args.iset_current
     my_hvps_ctrl.vset_current = args.vset_current
-    client.subscribe(f"/{my_hvps_ctrl.hvps_name}/cmd/#")
+    #client.subscribe(f"/{my_hvps_ctrl.hvps_name}/status/#")
+   
 
     if args.status == True:
         if args.channel_selected is None:
@@ -498,11 +500,16 @@ def run(device, mqtt_host):
             )
             # TODO: check if it is true
             msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+            #
 
     client.loop_start()
+    topic ='/SY4527/status'
+    client.subscribe(topic)
     while 1:
-        client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
-        print(f"Send `{msg}` ")
+        #client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
+        client.publish(topic,str(msg))
+        #client.publish(topic,json.dumps(msg))
+        print(f"SEND `{msg}` to topic `{topic}`")
         
        
         time.sleep(4)
@@ -513,10 +520,7 @@ def run(device, mqtt_host):
 if __name__ == "__main__":
     main()
     mqtt_host = "docker.for.mac.host.internal" 
-    mqtt_port = 1883
-    #device_name = SY4527
+    #mqtt_port = 1883
     run(hvps_ctrl, mqtt_host)
-    #import sys
-    #device_name, mqtt_host = sys.argv[1:]
-    #device = HMP(device_name)
+  
     

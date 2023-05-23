@@ -15,16 +15,17 @@ COPY caen_hvps/hvps .
 COPY requirements ./requirements
 RUN python3 -m pip install --no-cache-dir -r requirements/docker.txt
 
-COPY caen_hvps/caenlib .
+COPY caen_hvps/caenlib ./caenlib
 
 WORKDIR /usr/app/caen_hvps/caenlib/
-RUN tar -xzf CAENHVWrapper-6.3.tgz && \
-    rm CAENHVWrapper-6.3.tgz
+RUN tar -xzf CAENHVWrapper-6.3.tgz 
+RUN rm CAENHVWrapper-6.3.tgz
 
 WORKDIR /usr/app/caen_hvps/caenlib/CAENHVWrapper-6.3/
 RUN ./install.sh && \
     rm *.txt && \
     rm -rf HVWrapperDemo/
+
 
 ENV LD_LIBRARY_PATH="/usr/lib"
 
