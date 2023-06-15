@@ -257,7 +257,8 @@ def process_cli_args(args, config_dict):
                 args.hvps_name, my_slot, args.channel_selected
             )
             # TODO: check if it is true
-            msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+            #msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+            #print("status channels ===== " , msg)
 
     elif args.bias_voltage != None:
         my_hvps_ctrl.bias()
@@ -459,12 +460,11 @@ def on_connect(client, userdata, flags, rc):
         print("Failed to connect, return code %d\n", rc)
 
 def on_message(client, userdata, msg):
+    """Subscribed topic on message action"""
     #print("recv", msg.topic, msg.payload)
     #client.device.command(msg.topic, msg.payload)
-    """Subscribed topic on message action"""
-    print("Received message:")
-    print("Topic: " + msg.topic)
-    print("Message: " + msg.payload.decode())
+    print("RECEIVE message:")
+    print("Topic: " + msg.topic, msg.payload.decode())
 
 
 def run(device, mqtt_host):
@@ -499,18 +499,29 @@ def run(device, mqtt_host):
                 args.hvps_name, my_slot, args.channel_selected
             )
             # TODO: check if it is true
-            msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
-            #
+        msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+        slot = msg["slot"]
+        channel_name = msg["chan_name"]
+        channel_number = msg["chan_num"]
+        channel_info = msg["chan_info"]
 
     client.loop_start()
     topic ='/SY4527/status'
     client.subscribe(topic)
     while 1:
-        #client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
-        client.publish(topic,str(msg))
-        #client.publish(topic,json.dumps(msg))
-        print(f"SEND `{msg}` to topic `{topic}`")
+        formatted_msg = f"Message:\nSlot: {slot} | Channel Name: {channel_name} | Channel#: {channel_number} | "
+        #formatted_msg = "Message:\n"
+        for item in channel_info:
+            if "parameter" in item and "value" in item:
+                parameter = item["parameter"]
+                value = item["value"]
+                formatted_msg += f"{parameter}: {value} | "
         
+        client.publish(topic, str(formatted_msg))
+        print(f"SEND `{formatted_msg}` to topic `{topic}`")
+        #client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
+        #client.publish(topic,json.dumps(msg))
+        #print(f"SEND `{msg}` to topic `{topic}`")
        
         time.sleep(4)
     time.sleep(4)
@@ -523,4 +534,3 @@ if __name__ == "__main__":
     #mqtt_port = 1883
     run(hvps_ctrl, mqtt_host)
   
-    

@@ -151,6 +151,8 @@ class HVPS_Class:
             print("Slot:", channel_dict["slot"], end=" | ")
             print("Channel Name:", channel_dict["chan_name"], end=" | ")
             print("Channel#:", channel_dict["chan_num"], end=" | ")
+            counter = 0
+            channel_status_result["chan_info"] = []
             for channel_params in channel_dict["chan_info"]:
                 if channel_params["parameter"] == "Status":
                     # Attempt to decode the channel status, I'm not sure if this is working correctly
@@ -160,19 +162,46 @@ class HVPS_Class:
                             # We can have multiple channel status messages, I think...
                             my_status = (my_status + my_status_code + ",")
                 else:
-                    channel_status_result["chan_info"]["parameter"] = channel_params["parameter"]
-                    channel_status_result["chan_info"]["value"] = f"{channel_params['value']:.1f}"
-                    print(
-                        channel_params["parameter"],
-                        ":",
-                        f"{channel_params['value']:.1f}",
-                        end=" | ",
-                    )
+                    try:
+                    
+                        channel_status_result["chan_info"].append({"parameter": channel_dict["chan_info"][counter]["parameter"]})
+                        channel_status_result["chan_info"][counter]["parameter"] = channel_dict["chan_info"][counter]["parameter"]
+                        channel_status_result["chan_info"].append({"value": channel_dict["chan_info"][counter]["value"]})
+                        channel_status_result["chan_info"][counter]["value"] = channel_dict["chan_info"][counter]["value"]
+                    
+                        print(
+                            channel_dict["chan_info"][counter]["parameter"],
+                            ":",
+                            channel_dict["chan_info"][counter]["value"],
+                            end=" | ",
+                        )
+                    except IndexError:
+                        pass
+                counter +=1 
             if my_status == "":
                 my_status = "Off"
             print("Status :", my_status)
             channel_status_result["status"]: my_status
+            #channel_status_result["chan_info"]["parameter"] =  channel_dict["chan_info"][0]["parameter"]
+            #channel_status_result["chan_info"]["value"] =  f"{channel_dict["chan_info"][0]['value']:.1f}"
+            #channel_status_result["chan_info"]["value"] =  channel_dict["chan_info"][0]['value']
             return channel_status_result
+                   
+                
+                #else:
+                #    channel_status_result["chan_info"]["parameter"] = channel_params["parameter"]
+                #    channel_status_result["chan_info"]["value"] = f"{channel_params['value']:.1f}"
+                #    print(
+                #        channel_params["parameter"],
+                #        ":",
+                #        f"{channel_params['value']:.1f}",
+                #        end=" | ",
+                #    )
+            #if my_status == "":
+            #    my_status = "Off"
+            #print("Status :", my_status)
+            #channel_status_result["status"]: my_status
+            #return channel_status_result
 
     def status_channel(self, hvps_name, slot, channel):
         # status_channel: Get the parameters and values for an individual channel
