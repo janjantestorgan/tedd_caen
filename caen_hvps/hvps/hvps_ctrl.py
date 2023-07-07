@@ -530,7 +530,8 @@ def run(device, mqtt_host):
 
 if __name__ == "__main__":
     main()
-    mqtt_host = "docker.for.mac.host.internal" 
+    #mqtt_host = "docker.for.mac.host.internal" 
+    mqtt_host = "172.28.0.2" #or with hostaname:mqtt_host = "lyovis12.in2p3.fr" 
     #mqtt_port = 1883
     run(hvps_ctrl, mqtt_host)
   
